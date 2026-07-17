@@ -1,13 +1,38 @@
+import os
+
 import requests
 
 
-url = 'http://ws.bus.go.kr/api/rest/pathinfo/getPathInfoByBusNSub'
-params = dict()
-params['serviceKey'] = '6mPvZ8EhqQCDjTJ94qLHvp1RhezITVhvdIZcoLmSuGzuE6pS3hkAFcbO3mKPGocTc5n06x1OwNl81g+U+idARQ=='
-params['startX'] = '126.890001872801'
-params['startY'] = '37.5757542035555'
-params['endX'] = '127.04249040816'
-params['endY'] = '37.5804217059895'
-response = requests.get(url, params=params)
+API_URL = 'https://ws.bus.go.kr/api/rest/pathinfo/getPathInfoByBusNSub'
 
-print(response.content)
+
+def get_service_key():
+    service_key = os.environ.get('SEOUL_OPENAPI_SERVICE_KEY')
+    if not service_key:
+        raise RuntimeError('SEOUL_OPENAPI_SERVICE_KEY 환경 변수를 설정해야 합니다.')
+    return service_key
+
+
+def request_path(service_key, session=requests):
+    params = {
+        'serviceKey': service_key,
+        'startX': '126.890001872801',
+        'startY': '37.5757542035555',
+        'endX': '127.04249040816',
+        'endY': '37.5804217059895',
+    }
+    response = session.get(API_URL, params=params, timeout=30)
+    response.raise_for_status()
+    return response
+
+
+def main():
+    response = request_path(get_service_key())
+    print(response.content)
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except RuntimeError as error:
+        raise SystemExit(str(error)) from error
